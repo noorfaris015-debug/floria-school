@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدارس فلوريا الأهلية المختلطة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sunflower: '#FFD700',
+                        sunflowerDark: '#FFA500',
+                        turquoise: '#40E0D0',
+                        turquoiseDark: '#20B2AA',
+                        cream: '#FFF8DC',
+                        creamDark: '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #FFD700 0%, #40E0D0 50%, #FFF8DC 100%);
+        }
+        .section-bg {
+            background: linear-gradient(45deg, #FFF8DC 0%, #F0F8FF 100%);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .page {
+            display: none;
+            min-height: 100vh;
+        }
+        .page.active {
+            display: block;
+        }
+        .page-transition {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-hidden {
+            display: none;
+        }
+        .admin-mode .admin-hidden {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-cream">
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-turquoise mb-6 text-center">تسجيل دخول الإدارة</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">اسم المستخدم</label>
+                    <input type="text" id="username" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">كلمة المرور</label>
+                    <input type="password" id="password" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div id="loginError" class="text-red-500 text-sm hidden">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+                <div class="flex space-x-4 space-x-reverse">
+                    <button onclick="login()" class="flex-1 bg-turquoise text-white py-3 rounded-xl font-bold hover:bg-turquoiseDark transition-colors">
+                        دخول
+                    </button>
+                    <button onclick="closeLoginModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-400 transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Detail Modal -->
+    <div id="newsModal" class="modal">
+        <div class="bg-white rounded-3xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="newsModalTitle" class="text-2xl font-bold text-turquoise"></h2>
+                <button onclick="closeNewsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div id="newsModalImage" class="mb-6"></div>
+            <div id="newsModalContent" class="text-gray-700 leading-relaxed"></div>
+            <div id="newsModalDate" class="text-sm text-sunflowerDark font-semibold mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit News Modal -->
+    <div id="addNewsModal" class="modal">
+        <div class="bg-white rounded-3xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold text-turquoise mb-6 text-center">إضافة/تعديل خبر</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">عنوان الخبر</label>
+                    <input type="text" id="newsTitle" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">نوع الخبر</label>
+                    <select id="newsType" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                        <option value="إنجاز">إنجاز</option>
+                        <option value="فعالية">فعالية</option>
+                        <option value="رحلة">رحلة</option>
+                        <option value="رياضة">رياضة</option>
+                        <option value="تعليم">تعليم</option>
+                        <option value="مسرح">مسرح</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">رابط الصورة</label>
+                    <input type="url" id="newsImage" placeholder="https://example.com/image.jpg" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">المحتوى المختصر</label>
+                    <textarea id="newsShort" rows="3" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">المحتوى الكامل</label>
+                    <textarea id="newsFull" rows="6" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise resize-none"></textarea>
+                </div>
+                <div class="flex space-x-4 space-x-reverse">
+                    <button onclick="saveNews()" class="flex-1 bg-turquoise text-white py-3 rounded-xl font-bold hover:bg-turquoiseDark transition-colors">
+                        حفظ
+                    </button>
+                    <button onclick="closeAddNewsModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-400 transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Staff Modal -->
+    <div id="addStaffModal" class="modal">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-turquoise mb-6 text-center">إضافة/تعديل كادر</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">اسم الكادر</label>
+                    <input type="text" id="staffName" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">التخصص</label>
+                    <input type="text" id="staffSpecialty" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">رابط الصورة</label>
+                    <input type="url" id="staffImage" placeholder="https://example.com/image.jpg" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                </div>
+                <div class="flex space-x-4 space-x-reverse">
+                    <button onclick="saveStaff()" class="flex-1 bg-turquoise text-white py-3 rounded-xl font-bold hover:bg-turquoiseDark transition-colors">
+                        حفظ
+                    </button>
+                    <button onclick="closeAddStaffModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-400 transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="bg-white rounded-3xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold text-turquoise mb-6 text-center">إعدادات الروابط والمواقع</h2>
+            <div class="space-y-6">
+                <div class="bg-cream/50 p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold text-sunflowerDark mb-4">وسائل التواصل الاجتماعي</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">رابط فيسبوك</label>
+                            <input type="url" id="facebookLink" placeholder="https://facebook.com/yourpage" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">رابط إنستغرام</label>
+                            <input type="url" id="instagramLink" placeholder="https://instagram.com/yourpage" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">واتساب فرع دهوك</label>
+                            <input type="text" id="mainBranchWhatsappNumber" placeholder="966501234567" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                            <p class="text-sm text-gray-500 mt-1">أدخل الرقم بدون علامة + (مثال: 00000000000)</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">واتساب فرع زاخو</label>
+                            <input type="text" id="northBranchWhatsappNumber" placeholder="966507654321" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                            <p class="text-sm text-gray-500 mt-1">أدخل الرقم بدون علامة + (مثال: 00000000000)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-cream/50 p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold text-sunflowerDark mb-4">مواقع الفروع على الخريطة</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">موقع فرع دهوك</label>
+                            <input type="url" id="mainBranchLocation" placeholder="https://maps.google.com/?q=latitude,longitude" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                            <p class="text-sm text-gray-500 mt-1">مثال: https://maps.google.com/?q=24.7136,46.6753</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">موقع فرع زاخو</label>
+                            <input type="url" id="northBranchLocation" placeholder="https://maps.google.com/?q=latitude,longitude" class="w-full p-4 border border-turquoise/30 rounded-xl focus:outline-none focus:border-turquoise">
+                            <p class="text-sm text-gray-500 mt-1">مثال: https://maps.google.com/?q=24.8136,46.7753</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4 space-x-reverse">
+                    <button onclick="saveSettings()" class="flex-1 bg-turquoise text-white py-3 rounded-xl font-bold hover:bg-turquoiseDark transition-colors">
+                        حفظ الإعدادات
+                    </button>
+                    <button onclick="closeSettingsModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-400 transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 space-x-reverse cursor-pointer" onclick="navigateToPage('home')">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg floating overflow-hidden">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNnQwSVYYijdULoEyiws312Tun3ZBSgYf3Hw&s" alt="شعار مدرسة فلوريا" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <svg class="w-10 h-10 text-sunflower hidden" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                            <circle cx="12" cy="12" r="3" fill="#40E0D0"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">مدارس فلوريا الأهلية المختلطة</h1>
+                        <p class="text-white/90 text-sm">معًا نحو مستقبل مشرق ومتميز</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <button onclick="openSettingsModal()" class="admin-mode-only hidden bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                        ⚙️ الإعدادات
+                    </button>
+                    <button onclick="logout()" class="admin-mode-only hidden bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        تسجيل خروج
+                    </button>
+                    <button id="menuBtn" class="md:hidden bg-white/20 p-2 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-turquoise shadow-md">
+        <div class="container mx-auto px-4">
+            <div id="navMenu" class="hidden md:flex md:flex-row flex-col justify-center md:space-x-8 md:space-x-reverse space-y-2 md:space-y-0 py-4 px-4 md:px-0">
+                <button onclick="navigateToPage('home')" class="nav-btn bg-white text-turquoise px-6 py-2 rounded-full font-semibold hover:bg-sunflower hover:text-white transition-all duration-300">الرئيسية</button>
+                <button onclick="navigateToPage('about')" class="nav-btn text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-turquoise transition-all duration-300">عن المدرسة</button>
+                <button onclick="navigateToPage('departments')" class="nav-btn text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-turquoise transition-all duration-300">الأقسام</button>
+                <button onclick="navigateToPage('staff')" class="nav-btn text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-turquoise transition-all duration-300">الكادر التعليمي</button>
+                <button onclick="navigateToPage('news')" class="nav-btn text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-turquoise transition-all duration-300">الأخبار والفعاليات</button>
+                <button onclick="navigateToPage('branches')" class="nav-btn text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-turquoise transition-all duration-300">الفروع</button>
+                <button onclick="navigateToPage('contact')" class="nav-btn text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-turquoise transition-all duration-300">تواصل معنا</button>
+                <button onclick="openLoginModal()" class="nav-btn bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 rounded-full font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 shadow-lg">🔐 الإدارة</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Page -->
+    <div id="homePage" class="page active">
+        <main class="container mx-auto px-4 py-8">
+            <div class="text-center mb-12">
+                <div class="inline-block bg-gradient-to-r from-sunflower to-turquoise p-8 rounded-3xl shadow-2xl mb-8 floating">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNnQwSVYYijdULoEyiws312Tun3ZBSgYf3Hw&s" alt="شعار مدرسة فلوريا" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <svg class="w-16 h-16 text-sunflower hidden" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                            <circle cx="12" cy="12" r="4" fill="#FFF8DC"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-4xl font-bold text-white mb-4">مرحبًا بكم في مدارس فلوريا</h2>
+                    <p class="text-xl text-white/90">حيث نجمع بين التفوق الأكاديمي والأنشطة المتميزة لتنشئة جيل مبدع ومتميز</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover-scale cursor-pointer" onclick="navigateToPage('about')">
+                    <div class="w-16 h-16 bg-sunflower rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="text-2xl">🌟</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-turquoise mb-3 text-center">التميز الأكاديمي</h3>
+                    <p class="text-gray-600 text-center">نقدم تعليمًا عالي الجودة يواكب أحدث المناهج العالمية</p>
+                    <div class="text-center mt-4">
+                        <span class="text-sunflowerDark text-sm font-semibold">اضغط للمزيد →</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover-scale cursor-pointer" onclick="navigateToPage('departments')">
+                    <div class="w-16 h-16 bg-turquoise rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="text-2xl">🎨</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-sunflowerDark mb-3 text-center">الأقسام التعليمية</h3>
+                    <p class="text-gray-600 text-center">من رياض الأطفال إلى المرحلة الثانوية بأحدث الطرق التعليمية</p>
+                    <div class="text-center mt-4">
+                        <span class="text-sunflowerDark text-sm font-semibold">اضغط للمزيد →</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover-scale cursor-pointer" onclick="navigateToPage('staff')">
+                    <div class="w-16 h-16 bg-sunflower rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-turquoise mb-3 text-center">الكادر التعليمي</h3>
+                    <p class="text-gray-600 text-center">فريق متميز من المعلمين والمعلمات المؤهلين</p>
+                    <div class="text-center mt-4">
+                        <span class="text-sunflowerDark text-sm font-semibold">اضغط للمزيد →</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover-scale cursor-pointer" onclick="navigateToPage('news')">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-turquoise rounded-full flex items-center justify-center ml-4">
+                            <span class="text-white text-xl">📰</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-turquoise">الأخبار والفعاليات</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">تابع آخر أخبار المدرسة والأنشطة والإنجازات</p>
+                    <span class="text-sunflowerDark text-sm font-semibold">اضغط للمزيد →</span>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-lg hover-scale cursor-pointer" onclick="navigateToPage('contact')">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-sunflower rounded-full flex items-center justify-center ml-4">
+                            <span class="text-white text-xl">📞</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-sunflowerDark">تواصل معنا</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">تواصل معنا عبر وسائل التواصل المختلفة</p>
+                    <span class="text-sunflowerDark text-sm font-semibold">اضغط للمزيد →</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- About Page -->
+    <div id="aboutPage" class="page">
+        <main class="container mx-auto px-4 py-8">
+            <div class="mb-6">
+                <button onclick="navigateToPage('home')" class="flex items-center text-turquoise hover:text-turquoiseDark transition-colors">
+                    <span class="ml-2">←</span>
+                    <span>العودة للرئيسية</span>
+                </button>
+            </div>
+            
+            <div class="section-bg rounded-3xl p-8 mb-8">
+                <h2 class="text-4xl font-bold text-turquoise mb-8 text-center">عن مدارس فلوريا الأهلية المختلطة</h2>
+                
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white rounded-2xl p-8 shadow-lg">
+                        <div class="text-center mb-6">
+                            <div class="w-20 h-20 bg-sunflower rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-3xl text-white">👁️</span>
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-sunflowerDark mb-4 text-center">رؤيتنا</h3>
+                        <p class="text-gray-700 leading-relaxed text-center">أن نكون المدرسة الرائدة في تقديم تعليم متميز يجمع بين الأصالة والمعاصرة، ونساهم في إعداد جيل مبدع وقادر على مواجهة تحديات المستقبل بثقة وإبداع.</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-8 shadow-lg">
+                        <div class="text-center mb-6">
+                            <div class="w-20 h-20 bg-turquoise rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-3xl text-white">🎯</span>
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-turquoise mb-4 text-center">رسالتنا</h3>
+                        <p class="text-gray-700 leading-relaxed text-center">نلتزم بتوفير بيئة تعليمية محفزة وآمنة، تنمي قدرات الطلاب الأكاديمية والإبداعية والاجتماعية، من خلال كادر تعليمي متميز ومناهج حديثة تواكب التطور العالمي.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+                    <h3 class="text-3xl font-bold text-sunflowerDark mb-8 text-center">قيمنا الأساسية</h3>
+                    <div class="grid md:grid-cols-4 gap-6">
+                        <div class="text-center p-6 bg-gradient-to-b from-turquoise/10 to-turquoise/5 rounded-xl">
+                            <div class="w-16 h-16 bg-turquoise rounded-full flex items-center justify-center mb-4 mx-auto">
+                                <span class="text-white font-bold text-sm">التميز</span>
+                            </div>
+                            <p class="text-gray-600 text-sm">نسعى للتميز في كل ما نقدمه</p>
+                        </div>
+                        <div class="text-center p-6 bg-gradient-to-b from-sunflower/10 to-sunflower/5 rounded-xl">
+                            <div class="w-16 h-16 bg-sunflower rounded-full flex items-center justify-center mb-4 mx-auto">
+                                <span class="text-white font-bold text-sm">الإبداع</span>
+                            </div>
+                            <p class="text-gray-600 text-sm">نشجع الإبداع والابتكار</p>
+                        </div>
+                        <div class="text-center p-6 bg-gradient-to-b from-turquoise/10 to-turquoise/5 rounded-xl">
+                            <div class="w-16 h-16 bg-turquoise rounded-full flex items-center justify-center mb-4 mx-auto">
+                                <span class="text-white font-bold text-sm">الأمانة</span>
+                            </div>
+                            <p class="text-gray-600 text-sm">نحافظ على الأمانة والصدق</p>
+                        </div>
+                        <div class="text-center p-6 bg-gradient-to-b from-sunflower/10 to-sunflower/5 rounded-xl">
+                            <div class="w-16 h-16 bg-sunflower rounded-full flex items-center justify-center mb-4 mx-auto">
+                                <span class="text-white font-bold text-sm">التعاون</span>
+                            </div>
+                            <p class="text-gray-600 text-sm">نؤمن بقوة العمل الجماعي</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-sunflower to-turquoise rounded-2xl p-8 text-white text-center">
+                    <h3 class="text-2xl font-bold mb-4">كادرنا التعليمي</h3>
+                    <p class="text-lg opacity-90">يضم فريقنا نخبة من المعلمين والمعلمات المتخصصين والمؤهلين تأهيلاً عالياً، الذين يتمتعون بخبرة واسعة في مجال التعليم والتربية، ويحرصون على تطوير مهاراتهم باستمرار لمواكبة أحدث الطرق التعليمية.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Departments Page -->
+    <div id="departmentsPage" class="page">
+        <main class="container mx-auto px-4 py-8">
+            <div class="mb-6">
+                <button onclick="navigateToPage('home')" class="flex items-center text-turquoise hover:text-turquoiseDark transition-colors">
+                    <span class="ml-2">←</span>
+                    <span>العودة للرئيسية</span>
+                </button>
+            </div>
+
+            <h2 class="text-4xl font-bold text-turquoise mb-12 text-center">أقسام المدرسة</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-gradient-to-br from-sunflower to-sunflowerDark rounded-3xl p-8 text-white shadow-2xl">
+                    <div class="text-center">
+                        <span class="text-6xl mb-6 block">🌱</span>
+                        <h3 class="text-3xl font-bold mb-4">رياض الأطفال</h3>
+                        <p class="text-lg opacity-90 mb-6">تأسيس مبكر بطريقة ممتعة وآمنة لأطفالنا الصغار</p>
+                        <div class="bg-white/20 rounded-xl p-4 text-sm">
+                            <p class="mb-2">• العمر: 3-6 سنوات</p>
+                            <p class="mb-2">• التعلم باللعب والأنشطة التفاعلية</p>
+                            <p class="mb-2">• تنمية المهارات الأساسية والحركية</p>
+                            <p>• بيئة آمنة ومحفزة للإبداع</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-turquoise to-turquoiseDark rounded-3xl p-8 text-white shadow-2xl">
+                    <div class="text-center">
+                        <span class="text-6xl mb-6 block">📚</span>
+                        <h3 class="text-3xl font-bold mb-4">المرحلة الابتدائية</h3>
+                        <p class="text-lg opacity-90 mb-6">تنمية المهارات الأساسية والإبداع في بيئة محفزة</p>
+                        <div class="bg-white/20 rounded-xl p-4 text-sm">
+                            <p class="mb-2">• الصفوف الأول إلى السادس</p>
+                            <p class="mb-2">• تعلم المهارات الأساسية في القراءة والكتابة</p>
+                            <p class="mb-2">• الأنشطة التفاعلية والرياضية</p>
+                            <p>• تنمية الشخصية والثقة بالنفس</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-sunflower via-turquoise to-sunflowerDark rounded-3xl p-8 text-white shadow-2xl">
+                    <div class="text-center">
+                        <span class="text-6xl mb-6 block">🎯</span>
+                        <h3 class="text-3xl font-bold mb-4">المرحلة المتوسطة</h3>
+                        <p class="text-lg opacity-90 mb-6">تعزيز المعرفة وبناء الشخصية المتوازنة</p>
+                        <div class="bg-white/20 rounded-xl p-4 text-sm">
+                            <p class="mb-2">• الصفوف السابع إلى التاسع</p>
+                            <p class="mb-2">• تطوير المهارات الأكاديمية المتقدمة</p>
+                            <p class="mb-2">• الأنشطة اللاصفية والنوادي العلمية</p>
+                            <p>• إعداد الطلاب للمرحلة الثانوية</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-turquoiseDark to-sunflowerDark rounded-3xl p-8 text-white shadow-2xl">
+                    <div class="text-center">
+                        <span class="text-6xl mb-6 block">🎓</span>
+                        <h3 class="text-3xl font-bold mb-4">المرحلة الثانوية</h3>
+                        <p class="text-lg opacity-90 mb-6">إعداد الطلاب للمرحلة الجامعية والمهنية</p>
+                        <div class="bg-white/20 rounded-xl p-4 text-sm">
+                            <p class="mb-2">• الصفوف العاشر إلى الثاني عشر</p>
+                            <p class="mb-2">• التحضير للاختبارات الجامعية</p>
+                            <p class="mb-2">• التوجيه المهني والأكاديمي</p>
+                            <p>• برامج التفوق والموهبة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 shadow-lg">
+                <h3 class="text-2xl font-bold text-turquoise mb-6 text-center">مميزات إضافية في جميع المراحل</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 bg-sunflower rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">🏊</span>
+                        </div>
+                        <h4 class="font-bold text-turquoise mb-2">الأنشطة الرياضية</h4>
+                        <p class="text-gray-600 text-sm">حمام سباحة، ملاعب متنوعة، صالة رياضية</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 bg-turquoise rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">🎨</span>
+                        </div>
+                        <h4 class="font-bold text-sunflowerDark mb-2">الفنون والإبداع</h4>
+                        <p class="text-gray-600 text-sm">استوديو فني، مسرح، معامل الحاسوب</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 bg-sunflower rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">🔬</span>
+                        </div>
+                        <h4 class="font-bold text-turquoise mb-2">المعامل العلمية</h4>
+                        <p class="text-gray-600 text-sm">معامل الفيزياء، الكيمياء، الأحياء</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Staff Page -->
+    <div id="staffPage" class="page">
+        <main class="container mx-auto px-4 py-8">
+            <div class="mb-6 flex justify-between items-center">
+                <button onclick="navigateToPage('home')" class="flex items-center text-turquoise hover:text-turquoiseDark transition-colors">
+                    <span class="ml-2">←</span>
+                    <span>العودة للرئيسية</span>
+                </button>
+                <button onclick="openAddStaffModal()" class="admin-mode-only hidden bg-sunflower text-white px-6 py-2 rounded-lg hover:bg-sunflowerDark transition-colors">
+                    إضافة كادر جديد
+                </button>
+            </div>
+
+            <h2 class="text-4xl font-bold text-turquoise mb-12 text-center">الكادر التعليمي</h2>
+            
+            <div id="staffContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Staff members will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- News Page -->
+    <div id="newsPage" class="page">
+        <main class="container mx-auto px-4 py-8">
+            <div class="mb-6 flex justify-between items-center">
+                <button onclick="navigateToPage('home')" class="flex items-center text-turquoise hover:text-turquoiseDark transition-colors">
+                    <span class="ml-2">←</span>
+                    <span>العودة للرئيسية</span>
+                </button>
+                <button onclick="openAddNewsModal()" class="admin-mode-only hidden bg-sunflower text-white px-6 py-2 rounded-lg hover:bg-sunflowerDark transition-colors">
+                    إضافة خبر جديد
+                </button>
+            </div>
+
+            <h2 class="text-4xl font-bold text-turquoise mb-12 text-center">آخر الأخبار والفعاليات</h2>
+            
+            <div id="newsContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                <!-- News will be loaded here -->
+            </div>
+
+            <div class="bg-gradient-to-r from-sunflower to-turquoise rounded-3xl p-8 text-white text-center">
+                <h3 class="text-2xl font-bold mb-4">تابعونا للمزيد من الأخبار</h3>
+                <p class="text-lg opacity-90 mb-6">لا تفوتوا آخر أخبار وفعاليات مدارس فلوريا</p>
+                <button onclick="navigateToPage('contact')" class="bg-white text-turquoise px-8 py-3 rounded-full font-bold hover:bg-cream transition-colors">
+                    تواصل معنا
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Branches Page -->
+    <div id="branchesPage" class="page">
+        <main class="container mx-auto px-4 py-8">
+            <div class="mb-6">
+                <button onclick="navigateToPage('home')" class="flex items-center text-turquoise hover:text-turquoiseDark transition-colors">
+                    <span class="ml-2">←</span>
+                    <span>العودة للرئيسية</span>
+                </button>
+            </div>
+
+            <h2 class="text-4xl font-bold text-turquoise mb-12 text-center">فروعنا</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white rounded-3xl p-8 shadow-xl">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-sunflower rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">🏢</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-sunflowerDark"> فرع دهوك</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3 space-x-reverse p-3 bg-cream rounded-lg">
+                            <span class="text-turquoise text-xl">📍</span>
+                            <span class="text-gray-700 font-medium">سميل قرب فاملي مول مقابل جامعة دهوك كلية الزراعة</span>
+                        </div>
+                        <div class="flex items-center space-x-3 space-x-reverse p-3 bg-cream rounded-lg">
+                            <span class="text-turquoise text-xl">📞</span>
+                            <span class="text-gray-700 font-medium">0750 045 6661</span>
+                        </div>
+                        <div class="flex items-center space-x-3 space-x-reverse p-3 bg-cream rounded-lg">
+                            <span class="text-turquoise text-xl">📠</span>
+                            <span class="text-gray-700 font-medium">0770 145 6661</span>
+                        </div>
+                        
+                    </div>
+                    <button id="mainBranchMapBtn" onclick="openLocation('mainBranch')" class="w-full mt-6 h-40 bg-gradient-to-r from-cream to-turquoise/20 rounded-xl flex items-center justify-center hover:from-turquoise/10 hover:to-turquoise/30 transition-all duration-300 cursor-pointer">
+                        <div class="text-center">
+                            <span class="text-4xl mb-2 block">🗺️</span>
+                            <p class="text-turquoise font-semibold">اضغط لفتح الموقع على الخريطة</p>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-8 shadow-xl">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-turquoise rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">🏫</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-turquoise">فرع زاخو</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3 space-x-reverse p-3 bg-cream rounded-lg">
+                            <span class="text-sunflowerDark text-xl">📍</span>
+                            <span class="text-gray-700 font-medium"> عباسيكي قرب مستشفى نوروز </span>
+                        </div>
+                        <div class="flex items-center space-x-3 space-x-reverse p-3 bg-cream rounded-lg">
+                            <span class="text-sunflowerDark text-xl">📞</span>
+                            <span class="text-gray-700 font-medium">0750 145 6661</span>
+                        </div>
+                        
+                       
+                    </div>
+                    <button id="northBranchMapBtn" onclick="openLocation('northBranch')" class="w-full mt-6 h-40 bg-gradient-to-r from-cream to-sunflower/20 rounded-xl flex items-center justify-center hover:from-sunflower/10 hover:to-sunflower/30 transition-all duration-300 cursor-pointer">
+                        <div class="text-center">
+                            <span class="text-4xl mb-2 block">🗺️</span>
+                            <p class="text-sunflowerDark font-semibold">اضغط لفتح الموقع على الخريطة</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-turquoise to-sunflower rounded-3xl p-8 text-white">
+                <h3 class="text-2xl font-bold mb-6 text-center">مواعيد العمل</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="text-center">
+                        <h4 class="text-xl font-semibold mb-4">أيام الدراسة</h4>
+                        <div class="bg-white/20 rounded-xl p-4">
+                            <p class="mb-2">الأحد - الخميس</p>
+                            <p class="text-lg font-bold">8:30 ص - 2:30 م</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="text-xl font-semibold mb-4">الإدارة</h4>
+                        <div class="bg-white/20 rounded-xl p-4">
+                            <p class="mb-2">الأحد - الخميس</p>
+                            <p class="text-lg font-bold">8:30 ص - 3:00 م</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contactPage" class="page">
+        <main class="container mx-auto px-4 py-8">
+            <div class="mb-6">
+                <button onclick="navigateToPage('home')" class="flex items-center text-turquoise hover:text-turquoiseDark transition-colors">
+                    <span class="ml-2">←</span>
+                    <span>العودة للرئيسية</span>
+                </button>
+            </div>
+
+            <h2 class="text-4xl font-bold text-turquoise mb-12 text-center">تواصل معنا</h2>
+            
+            <div class="mb-12">
+                <div class="bg-white rounded-3xl p-8 shadow-xl max-w-2xl mx-auto">
+                    <h3 class="text-2xl font-bold text-sunflowerDark mb-8 text-center">شبكات التواصل الاجتماعي</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <a id="facebookBtn" href="#" target="_blank" class="flex items-center justify-center p-6 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-all duration-300 hover-scale">
+                            <span class="text-3xl ml-3">📘</span>
+                            <span class="font-semibold">فيسبوك</span>
+                        </a>
+                        <a id="instagramBtn" href="#" target="_blank" class="flex items-center justify-center p-6 bg-pink-500 text-white rounded-2xl hover:bg-pink-600 transition-all duration-300 hover-scale">
+                            <span class="text-3xl ml-3">📷</span>
+                            <span class="font-semibold">إنستغرام</span>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-xl font-bold text-turquoise mb-4 text-center">واتساب الفروع</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <a id="mainBranchWhatsapp" href="#" target="_blank" class="flex items-center justify-center p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all duration-300 hover-scale">
+                            <span class="text-2xl ml-2">💬</span>
+                            <div class="text-center">
+                                <div class="font-semibold text-sm">فرع دهوك</div>
+                                <div class="text-xs opacity-90">واتساب</div>
+                            </div>
+                        </a>
+                        <a id="northBranchWhatsapp" href="#" target="_blank" class="flex items-center justify-center p-4 bg-green-500 text-white rounded-2xl hover:bg-green-600 transition-all duration-300 hover-scale">
+                            <span class="text-2xl ml-2">💬</span>
+                            <div class="text-center">
+                                <div class="font-semibold text-sm">فرع زاخو </div>
+                                <div class="text-xs opacity-90">واتساب</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <div class="mt-8 p-6 bg-gradient-to-r from-sunflower/10 to-turquoise/10 rounded-2xl">
+                        <h4 class="text-lg font-bold text-turquoise mb-3">تابعونا للحصول على:</h4>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-center"><span class="text-sunflower ml-2">•</span> آخر الأخبار والإعلانات</li>
+                            <li class="flex items-center"><span class="text-sunflower ml-2">•</span> صور الفعاليات والأنشطة</li>
+                            <li class="flex items-center"><span class="text-sunflower ml-2">•</span> التحديثات الأكاديمية</li>
+                            <li class="flex items-center"><span class="text-sunflower ml-2">•</span> نصائح تعليمية مفيدة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-turquoise to-turquoiseDark rounded-2xl p-6 text-white text-center">
+                    <span class="text-4xl mb-4 block">📞</span>
+                    <h4 class="text-xl font-bold mb-2">اتصل بنا</h4>
+                    <p class="opacity-90">0750 045 6661</p>
+                    <p class="opacity-90">0750 145 6661</p>
+					<p class="opacity-90">0770 145 6661</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-turquoise to-sunflower rounded-2xl p-6 text-white text-center">
+                    <span class="text-4xl mb-4 block">⏰</span>
+                    <h4 class="text-xl font-bold mb-2">مواعيد العمل</h4>
+                    <p class="opacity-90 text-sm">الأحد - الخميس</p>
+                    <p class="opacity-90 text-sm">8:30 ص - 3:00 م</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center ml-3 overflow-hidden">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNnQwSVYYijdULoEyiws312Tun3ZBSgYf3Hw&s" alt="شعار مدرسة فلوريا" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <svg class="w-8 h-8 text-sunflower hidden" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                        <circle cx="12" cy="12" r="3" fill="#40E0D0"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold">مدارس فلوريا الأهلية المختلطة</h3>
+            </div>
+            <p class="text-white/90 mb-4">معًا نحو مستقبل مشرق ومتميز لأبنائنا</p>
+            <div class="flex justify-center space-x-6 space-x-reverse mb-4">
+                <button onclick="navigateToPage('home')" class="text-white/80 hover:text-white transition-colors">الرئيسية</button>
+                <button onclick="navigateToPage('about')" class="text-white/80 hover:text-white transition-colors">عن المدرسة</button>
+                <button onclick="navigateToPage('contact')" class="text-white/80 hover:text-white transition-colors">تواصل معنا</button>
+            </div>
+            <p class="text-white/70 text-sm">جميع الحقوق محفوظة © 2025 مدارس فلوريا الأهلية المختلطة</p>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables
+        let isAdminMode = false;
+        let currentEditingNews = null;
+        let currentEditingStaff = null;
+
+        // Load data from localStorage or use defaults
+        function loadFromStorage(key, defaultValue) {
+            const stored = localStorage.getItem(key);
+            return stored ? JSON.parse(stored) : defaultValue;
+        }
+
+        function saveToStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // Settings for social media and locations
+        let schoolSettings = loadFromStorage('schoolSettings', {
+            socialMedia: {
+                facebook: 'https://facebook.com/floriaschools',
+                instagram: 'https://instagram.com/floriaschools'
+            },
+            whatsapp: {
+                mainBranch: '000000000000',
+                northBranch: '0000000000000'
+            },
+            locations: {
+                mainBranch: 'https://maps.google.com/?q=24.7136,46.6753',
+                northBranch: 'https://maps.google.com/?q=24.8136,46.7753'
+            }
+        });
+
+        // Load data from localStorage or use sample data
+        let newsData = loadFromStorage('newsData', [
+            {
+                id: 1,
+                title: "فوز طلابنا في مسابقة العلوم",
+                type: "إنجاز",
+                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+                shortContent: "حقق طلاب المرحلة الثانوية المركز الأول في مسابقة العلوم على مستوى المنطقة، وذلك بمشاركة 50 مدرسة من مختلف أنحاء المملكة.",
+                fullContent: "في إنجاز رائع يضاف إلى سجل مدارس فلوريا المشرق، حقق طلاب المرحلة الثانوية المركز الأول في مسابقة العلوم الإقليمية التي أقيمت الأسبوع الماضي. شارك في هذه المسابقة أكثر من 50 مدرسة من مختلف أنحاء المملكة، وتنافس فيها أكثر من 200 طالب وطالبة. تميز فريقنا بمشروعهم المبتكر حول الطاقة المتجددة والذي لاقى إعجاب لجنة التحكيم. هذا الإنجاز يعكس جودة التعليم والإعداد المتميز الذي يحصل عليه طلابنا في مدارس فلوريا.",
+                date: "15 ديسمبر 2024"
+            },
+            {
+                id: 2,
+                title: "معرض الفنون السنوي",
+                type: "فعالية",
+                image: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&h=300&fit=crop",
+                shortContent: "افتتاح معرض الفنون السنوي لعرض إبداعات طلابنا في الرسم والحرف اليدوية والأعمال الفنية المتنوعة بحضور أولياء الأمور.",
+                fullContent: "شهدت مدارس فلوريا افتتاح معرض الفنون السنوي الذي يعرض إبداعات طلابنا من جميع المراحل التعليمية. ضم المعرض أكثر من 150 عملاً فنياً متنوعاً شمل اللوحات الزيتية، والرسم بالألوان المائية، والأعمال النحتية، والحرف اليدوية التراثية. حضر الافتتاح عدد كبير من أولياء الأمور والمهتمين بالفن، وأشادوا بمستوى الإبداع والتميز الذي أظهره الطلاب. يستمر المعرض لمدة أسبوعين ويمكن لجميع أفراد المجتمع زيارته.",
+                date: "10 ديسمبر 2024"
+            },
+            {
+                id: 3,
+                title: "رحلة تعليمية ترفيهية",
+                type: "رحلة",
+                image: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=300&fit=crop",
+                shortContent: "رحلة تعليمية لطلاب المرحلة المتوسطة إلى المتحف الوطني ومركز العلوم لتعزيز التعلم التفاعلي خارج الفصل الدراسي.",
+                fullContent: "نظمت مدارس فلوريا رحلة تعليمية شيقة لطلاب المرحلة المتوسطة إلى المتحف الوطني ومركز العلوم التفاعلي. هدفت الرحلة إلى تعزيز التعلم خارج أسوار الفصل الدراسي وربط المناهج النظرية بالتطبيق العملي. تضمنت الرحلة زيارة قاعات التاريخ الطبيعي، ومعارض الحضارات القديمة، والتجارب العلمية التفاعلية. أبدى الطلاب حماساً كبيراً وتفاعلوا بشكل إيجابي مع جميع الأنشطة المقدمة، مما عزز من فهمهم للمواد العلمية والتاريخية.",
+                date: "5 ديسمبر 2024"
+            }
+        ]);
+
+        let staffData = loadFromStorage('staffData', [
+            {
+                id: 1,
+                name: "أ. سارة أحمد",
+                specialty: "معلمة اللغة العربية",
+                image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face"
+            },
+            {
+                id: 2,
+                name: "أ. محمد علي",
+                specialty: "معلم الرياضيات",
+                image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face"
+            },
+            {
+                id: 3,
+                name: "أ. فاطمة حسن",
+                specialty: "معلمة العلوم",
+                image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face"
+            },
+            {
+                id: 4,
+                name: "أ. أحمد محمود",
+                specialty: "معلم التاريخ",
+                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
+            },
+            {
+                id: 5,
+                name: "أ. نور الهدى",
+                specialty: "معلمة الفنون",
+                image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face"
+            },
+            {
+                id: 6,
+                name: "أ. خالد سالم",
+                specialty: "معلم التربية البدنية",
+                image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face"
+            }
+        ]);
+
+        // Settings functions
+        function openSettingsModal() {
+            document.getElementById('facebookLink').value = schoolSettings.socialMedia.facebook;
+            document.getElementById('instagramLink').value = schoolSettings.socialMedia.instagram;
+            document.getElementById('mainBranchWhatsappNumber').value = schoolSettings.whatsapp.mainBranch;
+            document.getElementById('northBranchWhatsappNumber').value = schoolSettings.whatsapp.northBranch;
+            document.getElementById('mainBranchLocation').value = schoolSettings.locations.mainBranch;
+            document.getElementById('northBranchLocation').value = schoolSettings.locations.northBranch;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            schoolSettings.socialMedia.facebook = document.getElementById('facebookLink').value;
+            schoolSettings.socialMedia.instagram = document.getElementById('instagramLink').value;
+            schoolSettings.whatsapp.mainBranch = document.getElementById('mainBranchWhatsappNumber').value;
+            schoolSettings.whatsapp.northBranch = document.getElementById('northBranchWhatsappNumber').value;
+            schoolSettings.locations.mainBranch = document.getElementById('mainBranchLocation').value;
+            schoolSettings.locations.northBranch = document.getElementById('northBranchLocation').value;
+            
+            // حفظ الإعدادات في localStorage
+            saveToStorage('schoolSettings', schoolSettings);
+            
+            updateSocialMediaLinks();
+            updateWhatsappLinks();
+            closeSettingsModal();
+            alert('تم حفظ الإعدادات بنجاح!');
+        }
+
+        function updateSocialMediaLinks() {
+            document.getElementById('facebookBtn').href = schoolSettings.socialMedia.facebook;
+            document.getElementById('instagramBtn').href = schoolSettings.socialMedia.instagram;
+        }
+
+        function updateWhatsappLinks() {
+            const mainWhatsappUrl = `https://wa.me/${schoolSettings.whatsapp.mainBranch}?text=استفسار عن مدارس فلوريا - فرع دهوك`;
+            const northWhatsappUrl = `https://wa.me/${schoolSettings.whatsapp.northBranch}?text=مرحباً، أود الاستفسار عن مدارس فلوريا - فرع زاخو`;
+            
+            document.getElementById('mainBranchWhatsapp').href = mainWhatsappUrl;
+            document.getElementById('northBranchWhatsapp').href = northWhatsappUrl;
+        }
+
+        function openLocation(branchType) {
+            const url = schoolSettings.locations[branchType];
+            if (url && url !== '#') {
+                window.open(url, '_blank');
+            } else {
+                alert('لم يتم تحديد موقع هذا الفرع بعد. يرجى التواصل مع الإدارة.');
+            }
+        }
+
+        // Admin functions
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'noorfaris' && password === '1234') {
+                isAdminMode = true;
+                document.body.classList.add('admin-mode');
+                document.querySelectorAll('.admin-mode-only').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.admin-hidden').forEach(el => el.style.display = 'none');
+                closeLoginModal();
+                loadNews();
+                loadStaff();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            isAdminMode = false;
+            document.body.classList.remove('admin-mode');
+            document.querySelectorAll('.admin-mode-only').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.admin-hidden').forEach(el => el.style.display = 'block');
+            loadNews();
+            loadStaff();
+        }
+
+        // News functions
+        function openAddNewsModal(newsId = null) {
+            currentEditingNews = newsId;
+            const modal = document.getElementById('addNewsModal');
+            
+            if (newsId) {
+                const news = newsData.find(n => n.id === newsId);
+                document.getElementById('newsTitle').value = news.title;
+                document.getElementById('newsType').value = news.type;
+                document.getElementById('newsImage').value = news.image;
+                document.getElementById('newsShort').value = news.shortContent;
+                document.getElementById('newsFull').value = news.fullContent;
+            } else {
+                document.getElementById('newsTitle').value = '';
+                document.getElementById('newsType').value = 'إنجاز';
+                document.getElementById('newsImage').value = '';
+                document.getElementById('newsShort').value = '';
+                document.getElementById('newsFull').value = '';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeAddNewsModal() {
+            document.getElementById('addNewsModal').classList.remove('active');
+            currentEditingNews = null;
+        }
+
+        function saveNews() {
+            const title = document.getElementById('newsTitle').value;
+            const type = document.getElementById('newsType').value;
+            const image = document.getElementById('newsImage').value;
+            const shortContent = document.getElementById('newsShort').value;
+            const fullContent = document.getElementById('newsFull').value;
+            
+            if (!title || !shortContent || !fullContent) {
+                alert('يرجى ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            const newsItem = {
+                title,
+                type,
+                image: image || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+                shortContent,
+                fullContent,
+                date: new Date().toLocaleDateString('ar-SA')
+            };
+            
+            if (currentEditingNews) {
+                const index = newsData.findIndex(n => n.id === currentEditingNews);
+                newsData[index] = { ...newsItem, id: currentEditingNews };
+            } else {
+                newsItem.id = Date.now();
+                newsData.unshift(newsItem);
+            }
+            
+            // حفظ البيانات في localStorage
+            saveToStorage('newsData', newsData);
+            
+            loadNews();
+            closeAddNewsModal();
+        }
+
+        function deleteNews(newsId) {
+            if (confirm('هل أنت متأكد من حذف هذا الخبر؟')) {
+                newsData = newsData.filter(n => n.id !== newsId);
+                // حفظ البيانات المحدثة في localStorage
+                saveToStorage('newsData', newsData);
+                loadNews();
+            }
+        }
+
+        function openNewsModal(newsId) {
+            const news = newsData.find(n => n.id === newsId);
+            if (!news) return;
+            
+            document.getElementById('newsModalTitle').textContent = news.title;
+            document.getElementById('newsModalDate').textContent = news.date;
+            document.getElementById('newsModalContent').textContent = news.fullContent;
+            
+            const imageContainer = document.getElementById('newsModalImage');
+            if (news.image) {
+                imageContainer.innerHTML = `<img src="${news.image}" alt="${news.title}" class="w-full h-64 object-cover rounded-xl" onerror="this.style.display='none';">`;
+            } else {
+                imageContainer.innerHTML = '';
+            }
+            
+            document.getElementById('newsModal').classList.add('active');
+        }
+
+        function closeNewsModal() {
+            document.getElementById('newsModal').classList.remove('active');
+        }
+
+        function loadNews() {
+            const container = document.getElementById('newsContainer');
+            container.innerHTML = '';
+            
+            newsData.forEach(news => {
+                const typeColors = {
+                    'إنجاز': 'bg-sunflower',
+                    'فعالية': 'bg-turquoise',
+                    'رحلة': 'bg-sunflower',
+                    'رياضة': 'bg-turquoise',
+                    'تعليم': 'bg-sunflower',
+                    'مسرح': 'bg-turquoise'
+                };
+                
+                const gradients = {
+                    'إنجاز': 'from-sunflower to-turquoise',
+                    'فعالية': 'from-turquoise to-sunflower',
+                    'رحلة': 'from-sunflower to-turquoise',
+                    'رياضة': 'from-turquoise to-sunflowerDark',
+                    'تعليم': 'from-sunflowerDark to-turquoise',
+                    'مسرح': 'from-turquoise to-sunflower'
+                };
+                
+                const newsCard = document.createElement('div');
+                newsCard.className = 'bg-white rounded-2xl shadow-xl overflow-hidden hover-scale relative';
+                newsCard.innerHTML = `
+                    <div class="h-48 bg-gradient-to-r ${gradients[news.type]} flex items-center justify-center overflow-hidden">
+                        ${news.image ? 
+                            `<img src="${news.image}" alt="${news.title}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                             <div class="w-full h-full bg-gradient-to-r ${gradients[news.type]} flex items-center justify-center" style="display: none;">
+                                <span class="text-6xl text-white">📰</span>
+                             </div>` :
+                            `<span class="text-6xl text-white">📰</span>`
+                        }
+                    </div>
+                    <div class="p-6">
+                        <span class="${typeColors[news.type]} text-white px-3 py-1 rounded-full text-xs font-semibold">${news.type}</span>
+                        <h3 class="text-xl font-bold text-turquoise mb-3 mt-2">${news.title}</h3>
+                        <p class="text-gray-600 mb-4 leading-relaxed">${news.shortContent}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-sunflowerDark font-semibold">${news.date}</span>
+                            <button onclick="openNewsModal(${news.id})" class="text-turquoise hover:text-turquoiseDark text-sm font-semibold">قراءة المزيد →</button>
+                        </div>
+                        ${isAdminMode ? `
+                            <div class="flex space-x-2 space-x-reverse mt-4 pt-4 border-t">
+                                <button onclick="openAddNewsModal(${news.id})" class="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                                    تعديل
+                                </button>
+                                <button onclick="deleteNews(${news.id})" class="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm hover:bg-red-600 transition-colors">
+                                    حذف
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(newsCard);
+            });
+        }
+
+        // Staff functions
+        function openAddStaffModal(staffId = null) {
+            currentEditingStaff = staffId;
+            const modal = document.getElementById('addStaffModal');
+            
+            if (staffId) {
+                const staff = staffData.find(s => s.id === staffId);
+                document.getElementById('staffName').value = staff.name;
+                document.getElementById('staffSpecialty').value = staff.specialty;
+                document.getElementById('staffImage').value = staff.image;
+            } else {
+                document.getElementById('staffName').value = '';
+                document.getElementById('staffSpecialty').value = '';
+                document.getElementById('staffImage').value = '';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeAddStaffModal() {
+            document.getElementById('addStaffModal').classList.remove('active');
+            currentEditingStaff = null;
+        }
+
+        function saveStaff() {
+            const name = document.getElementById('staffName').value;
+            const specialty = document.getElementById('staffSpecialty').value;
+            const image = document.getElementById('staffImage').value;
+            
+            if (!name || !specialty) {
+                alert('يرجى ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            const staffItem = {
+                name,
+                specialty,
+                image: image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face'
+            };
+            
+            if (currentEditingStaff) {
+                const index = staffData.findIndex(s => s.id === currentEditingStaff);
+                staffData[index] = { ...staffItem, id: currentEditingStaff };
+            } else {
+                staffItem.id = Date.now();
+                staffData.push(staffItem);
+            }
+            
+            // حفظ البيانات في localStorage
+            saveToStorage('staffData', staffData);
+            
+            loadStaff();
+            closeAddStaffModal();
+        }
+
+        function deleteStaff(staffId) {
+            if (confirm('هل أنت متأكد من حذف هذا العضو؟')) {
+                staffData = staffData.filter(s => s.id !== staffId);
+                // حفظ البيانات المحدثة في localStorage
+                saveToStorage('staffData', staffData);
+                loadStaff();
+            }
+        }
+
+        function loadStaff() {
+            const container = document.getElementById('staffContainer');
+            container.innerHTML = '';
+            
+            staffData.forEach(staff => {
+                const staffCard = document.createElement('div');
+                staffCard.className = 'bg-white rounded-2xl p-6 shadow-lg hover-scale text-center relative';
+                staffCard.innerHTML = `
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-r from-turquoise to-sunflower p-1">
+                        <div class="w-full h-full rounded-full overflow-hidden bg-white">
+                            <img src="${staff.image}" alt="${staff.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-full h-full bg-gradient-to-r from-turquoise to-sunflower flex items-center justify-center" style="display: none;">
+                                <span class="text-2xl text-white">👤</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-turquoise mb-2">${staff.name}</h3>
+                    <p class="text-sunflowerDark font-semibold">${staff.specialty}</p>
+                    ${isAdminMode ? `
+                        <div class="flex space-x-2 space-x-reverse mt-4 pt-4 border-t">
+                            <button onclick="openAddStaffModal(${staff.id})" class="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                                تعديل
+                            </button>
+                            <button onclick="deleteStaff(${staff.id})" class="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm hover:bg-red-600 transition-colors">
+                                حذف
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(staffCard);
+            });
+        }
+
+        // Navigation functionality
+        function navigateToPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            const targetPage = document.getElementById(pageId + 'Page');
+            targetPage.classList.add('active');
+            targetPage.classList.add('page-transition');
+            
+            // Update navigation buttons
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.classList.remove('bg-white', 'text-turquoise');
+                btn.classList.add('text-white');
+            });
+            
+            // Highlight active button based on current page
+            const currentNavBtn = Array.from(navButtons).find(btn => 
+                btn.textContent.includes(getPageTitle(pageId))
+            );
+            if (currentNavBtn) {
+                currentNavBtn.classList.add('bg-white', 'text-turquoise');
+                currentNavBtn.classList.remove('text-white');
+            }
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Remove transition class after animation
+            setTimeout(() => {
+                targetPage.classList.remove('page-transition');
+            }, 500);
+        }
+
+        function getPageTitle(pageId) {
+            const titles = {
+                'home': 'الرئيسية',
+                'about': 'عن المدرسة',
+                'departments': 'الأقسام',
+                'staff': 'الكادر التعليمي',
+                'news': 'الأخبار',
+                'branches': 'الفروع',
+                'contact': 'تواصل معنا'
+            };
+            return titles[pageId] || '';
+        }
+
+        // Mobile menu toggle
+        const menuBtn = document.getElementById('menuBtn');
+        const navMenu = document.getElementById('navMenu');
+        
+        menuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('hidden');
+            navMenu.classList.toggle('flex');
+            navMenu.classList.toggle('flex-col');
+            navMenu.classList.toggle('md:flex-row');
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            navigateToPage('home');
+            loadNews();
+            loadStaff();
+            updateSocialMediaLinks();
+            updateWhatsappLinks();
+        });
+
+        // Close mobile menu when clicking on navigation items
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    navMenu.classList.add('hidden');
+                    navMenu.classList.remove('flex');
+                }
+            });
+        });
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Handle Enter key in login form
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('active')) {
+                login();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'979ffc0c866165c2',t:'MTc1NzAxNTA5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
