@@ -1,2 +1,0 @@
-# floria-school
-floria-school
